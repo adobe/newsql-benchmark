@@ -1,44 +1,31 @@
-# Open Source Starter Repo
+# NewSQL Benchmark Runner
 
-This repository contains templates for project documentation, ensuring necessary
-legal and contributor documentation is explicit. All sections below in this `README.md`
-should be considered a template for a typical project `README.md`.
-
-## PROJECT NAME
-
-A short description of what this project does.
+This project provides an automated framework for benchmarking NewSQL databases.
 
 ## Goals
 
-It is a good idea to provide a mission statement for your project, enshrining
-what the project wants to accomplish so that as more people join your project
-everyone can work in alignment.
+- Provide a framework for automated benchmarking of NewSQL databases
+- Support automated provisioning of hardware resources on public cloud
+- Support automated installation of NewSQL database software
+- Support benchmarking the following NewSQL databases - Foundation DB, Cockroach DB and TiDB
+- Support for the following workload generators - YCSB
+- Support specification of benchmark experiments using JSON
+- Support summarization of benchmark results into a single report file
+- Monitor system metrics and include in report file
+- Provide the ability to extend the framework to support a variety of workload generators
+
 
 ## Non-Goals
 
-It is also a good idea to declare what are _not_ goals of the project to prevent
-potential feature creep.
+- Creating a new workload generator
 
 ### Installation
 
-Instructions for how to download/install the code onto your machine.
-
-Example:
-```
-npm install myProject --save
-```
+see Instructions.md
 
 ### Usage
 
-Usage instructions for your code.
-
-Example:
-
-```
-var myMod = require('mymodule');
-
-myMod.foo('hi');
-```
+see Instructions.md
 
 ### Contributing
 
