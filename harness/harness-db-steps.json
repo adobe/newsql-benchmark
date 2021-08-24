@@ -1,0 +1,27 @@
+{
+  "default":{
+     "provisionLoadgen":        ["harness-ansible", "common_vm_setup.yaml loadgen_ycsb_install.yaml"],
+     "insertWorkload":          ["harness-ansible", "loadgen_ycsb_run.yaml -e \"loadgen_workload_name=insert\""],
+     "readOnlyWorkload":        ["harness-ansible", "loadgen_ycsb_run.yaml -e \"loadgen_workload_name=read\""],
+     "readModifyWriteWorkload": ["harness-ansible", "loadgen_ycsb_run.yaml -e \"loadgen_workload_name=readmodifywrite ycsb_read_proportion=0.0 ycsb_update_proportion=1.0\"" ],
+     "read90Update10Workload":  ["harness-ansible", "loadgen_ycsb_run.yaml -e \"loadgen_workload_name=read90update10workload ycsb_read_proportion=0.9 ycsb_update_proportion=0.1\"" ],
+     "loadgenStatusCheck":      ["harness-ansible", "loadgen_ycsb_statuscheck.yaml"],
+     "loadgenResults":          ["harness-ansible", "loadgen_ycsb_results.yaml"]
+  },
+  "fdb":{
+     "ycsb_binding_name":       "foundationdb",
+     "ansible_params":          "ycsb_dir=/home/fdb/ycsb-foundationdb-binding-0.18.0-SNAPSHOT",
+     "provisionDb":             ["harness-ansible", "common_vm_setup.yaml common_mount_ssds.yaml fdb_create_db.yaml common_install_monitoring.yaml"],
+     "resetDb":                 ["harness-ansible", "fdb_reset.yaml"]
+  },
+  "crdb":{
+     "ycsb_binding_name":       "jdbc",
+     "provisionDb":             ["harness-ansible", "common_vm_setup.yaml common_mount_ssds.yaml crdb_install.yaml crdb_create_db.yaml crdb_configure_lb.yaml common_install_monitoring.yaml"],
+     "resetDb":                 ["harness-ansible", "crdb_reset.yaml"]
+  },
+  "tidb":{
+     "ycsb_binding_name":       "jdbc",
+     "provisionDb":             ["harness-ansible", "common_vm_setup.yaml  tidb_install.yaml common_install_monitoring.yaml"],
+     "resetDb":                 ["harness-ansible", "tidb_reset.yaml"]
+  }
+}

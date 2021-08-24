@@ -1,0 +1,25 @@
+## db.properties
+##
+
+#db.url=jdbc:postgresql://10.0.1.15:26257/ycsb
+
+db.driver=org.postgresql.Driver
+db.url=jdbc:postgresql://{{crdb_lb}}:26258/ycsb
+
+db.user=root
+db.passwd=
+
+# The batch size for doing batched inserts. Defaults to 0. Set to >0 to use batching.
+db.batchsize=1000
+
+# JDBC fetch size hinted to the driver.
+jdbc.fetchsize=10
+
+# The JDBC connection auto-commit property for the driver.
+jdbc.autocommit=true
+
+# Use addBatch()/executeBatch() JDBC methods instead of executeUpdate() for writes (default: false)
+jdbc.batchupdateapi=false
+
+# The number of rows to be batched before commit (or executeBatch() when jdbc.batchupdateapi=true)
+db.batchsize=1000

@@ -1,0 +1,15 @@
+- name: Check that the somefile.conf exists
+  stat:
+    path: "{{ home_dir}}/tidb.tiup_cluster.DONE"
+  register: done_file_stat_result
+- debug: "Done file exists = {{not done_file_stat_result.stat.exists}}"
+
+- when: true #not done_file_stat_result.stat.exists
+  block:
+    - name: Execute tidb_script
+      shell: "{{ home_dir}}/tiup_install.sh >> {{ home_dir}}/tiup_install.log"
+
+    - name: Create a marker file denoting that partitioning has been completed
+      file:
+        path: "{{ home_dir}}/tidb.tiup_cluster.DONE"
+        state: touch

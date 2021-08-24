@@ -1,0 +1,6 @@
+---
+- hosts: [as]
+  roles:
+    - common
+    - fdb_common
+    - fdb_reset

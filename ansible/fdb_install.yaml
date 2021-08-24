@@ -1,0 +1,14 @@
+---
+- hosts: [as]
+  roles:
+    - common
+    - fdb_common
+    - common_install
+    - fdb_install
+  tasks:
+
+- hosts: as[0]
+  roles:
+    - common
+    - fdb_common
+  tasks:

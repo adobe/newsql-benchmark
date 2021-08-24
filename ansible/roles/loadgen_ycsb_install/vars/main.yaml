@@ -1,0 +1,5 @@
+fdb_client_installer_url: "https://www.foundationdb.org/downloads/{{ fdb_version }}/ubuntu/installers/foundationdb-clients_{{ fdb_version }}-1_amd64.deb"
+fdb_client_deb_path: "{{home_dir}}/foundationdb-clients_{{ fdb_version }}-1_amd64.deb"
+ubuntu_version: '16.04'
+fdb_version: '6.2.27'
+fdb_installer_path: "{{home_dir}}/"

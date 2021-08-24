@@ -1,0 +1,23 @@
+- name: Update and upgrade apt packages
+  become: "true"
+  apt:
+    upgrade: yes
+    update_cache: yes
+
+- name: Install a list of packages
+  become: "true"
+  apt:
+    pkg:
+      - openjdk-8-jre-headless
+      - fio
+      - sysstat
+      - iotop
+      - ioping
+      - jq
+      - python
+      - python-pip
+      - wget
+      - ntp
+
+- name: Install glances 1
+  shell: 'pip install glances'

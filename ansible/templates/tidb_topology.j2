@@ -1,0 +1,34 @@
+# # Global variables are applied to all deployments and used as the default value of
+# # the deployments if a specific deployment value is missing.
+# # This file generated base on inventory.yaml
+
+
+global:
+  user: "fdb"
+  ssh_port: 22
+  deploy_dir: "/data1/tidb-deploy"
+  data_dir: "/data1"
+
+pd_servers:
+{% for item in lista %}
+  - host: {{ item }}
+{% endfor %}
+
+tidb_servers:
+{% for item in lista %}
+  - host: {{ item }}
+{% endfor %}
+
+tikv_servers:
+{% for item in lista %}
+  - host: {{ item }}
+{% endfor %}
+
+#monitoring_servers:
+#  - host: {{lista[0]}}
+
+#grafana_servers:
+#  - host: {{lista[0]}}
+
+#alertmanager_servers:
+#  - host: {{lista[0]}}

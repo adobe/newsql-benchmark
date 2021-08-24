@@ -1,0 +1,7 @@
+---
+- hosts: [as]
+  roles:
+    - common
+    - fdb_common
+    - fdb_configure
+  tasks:

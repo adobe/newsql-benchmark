@@ -1,0 +1,5 @@
+- name: loadgen copy mysql jdbc driver
+  become: true
+  copy:
+    src: files/mysql-connector-java-8.0.22.jar
+    dest: "{{ycsb_dir}}/jdbc-binding/lib/"

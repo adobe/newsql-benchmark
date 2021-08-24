@@ -1,0 +1,24 @@
+# Defaults - to be overridden
+loadgen_run_id: 'fdb_run_001'
+loadgen_db_name: 'fdb' #todo:
+loadgen_workload_name: 'insert'
+loadgen_exp_name: 'default_exp_{{loadgen_workload_name}}'
+loadgen_num_keys: 1000000
+loadgen_value_size_bytes: 2000
+loadgen_threads_per_process: 50
+loadgen_process_per_host: 8
+loadgen_batch_size: 100
+
+# Doesn't change
+loadgen_keys_per_host: "{{ (loadgen_num_keys|int /(play_hosts | length)) | int }}"
+loadgen_keys_per_process: "{{ ((loadgen_keys_per_host | int)/ (loadgen_process_per_host|int)) | int}}"
+loadgen_start_key_offset: 0
+loadgen_start_key_per_host: "{{ ((play_hosts.index(inventory_hostname) * loadgen_keys_per_host|int) + loadgen_start_key_offset) | int }}"
+loadgen_start_key_per_host_process_array: "{{ range(loadgen_start_key_per_host|int, loadgen_start_key_per_host|int + loadgen_keys_per_host|int, loadgen_keys_per_process|int) | list }}"
+
+loadgen_log_file_basepath: "{{ home_dir }}/loadgen/{{loadgen_run_id}}"
+loadgen_log_file: '{{loadgen_log_file_basepath}}/loadgen-{{ loadgen_exp_name}}.log'
+
+loadgen_results_file: '{{loadgen_log_file_basepath}}/loadgen-{{ loadgen_exp_name}}.results.csv'
+loadgen_combined_results_path: '/tmp/{{loadgen_run_id}}.results.csv'
+loadgen_results_header_line: 'Runtime(s), Throughput(op/s), Insert-Failed-Operations, Insert-Successful-Operations, Insert-AvgLatency(us), Read-Failed-Operations, Read-Successful-Operations, Read-AvgLatency(us), Read-P95Latency(us), Read-P99Latency(us), Update-Failed-Operations, Update-Successful-Operations, Update-AvgLatency(us), Update-P95Latency(us), Update-P99Latency(us)'

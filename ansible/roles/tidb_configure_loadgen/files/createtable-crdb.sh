@@ -1,0 +1,1 @@
+java -cp /home/crdb/ycsb-0.17.0/jdbc-binding/lib/jdbc-binding-0.17.0.jar:/home/crdb/ycsb-0.17.0/postgrenosql-binding/lib/postgresql-9.4.1212.jre7.jar site.ycsb.db.JdbcDBCreateTable -p fieldcount=20 -P /home/crdb/db.properties -n usertable

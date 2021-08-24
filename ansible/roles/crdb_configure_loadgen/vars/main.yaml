@@ -1,0 +1,4 @@
+home_dir: "/home/{{ real_user }}"
+as_private_ips: "{{groups['as_private']}}"
+cores_per_machine: 8
+ycsb_dir: '{{home_dir}}/ycsb-0.17.0'

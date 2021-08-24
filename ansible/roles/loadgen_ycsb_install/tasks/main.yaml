@@ -1,0 +1,35 @@
+- name: copy file from local to remote with owner, group and file permissions (symbolic)
+  copy:
+    src: ycsb-fdb.sh
+    dest: "{{ home_dir }}/ycsb-fdb.sh"
+    owner: "{{ real_user }}"
+    group: "{{ real_user }}"
+    mode: u=rwx,g=rx,o=rx
+
+- name: copy file from local to remote with owner, group and file permissions (symbolic)
+  copy:
+    src: ycsb-foundationdb-binding-0.18.0-SNAPSHOT.tar.gz
+    dest: "{{ home_dir }}/ycsb-foundationdb-binding-0.18.0-SNAPSHOT.tar.gz"
+    owner: "{{ real_user }}"
+    group: "{{ real_user }}"
+    mode: u=rwx,g=rx,o=rx
+
+- name: Run script to install ycsb
+  command: sudo sh {{ home_dir }}/ycsb-fdb.sh
+
+- name: Check if FDB client package is installed
+  command: dpkg-query -W foundationdb-clients
+  register: fdb_client_package_check_deb
+  failed_when: fdb_client_package_check_deb.rc > 1
+  changed_when: fdb_client_package_check_deb.rc == 1
+
+- name: Download FDB client package
+  get_url:
+    url="{{ fdb_client_installer_url }}"
+    dest="{{home_dir}}"
+  when: fdb_client_package_check_deb.rc == 1
+
+- name: Install FDB client package
+  become: "true"
+  apt: deb="{{fdb_client_deb_path}}"
+  when: fdb_client_package_check_deb.rc == 1

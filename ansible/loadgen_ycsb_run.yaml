@@ -1,0 +1,8 @@
+---
+- hosts: [loadgen]
+  roles:
+    - common
+    - loadgen_common
+    - loadgen_ycsb_common
+    - loadgen_ycsb_kill
+    - loadgen_ycsb_run

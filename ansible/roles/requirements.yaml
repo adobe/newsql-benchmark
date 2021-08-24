@@ -1,0 +1,9 @@
+---
+roles:
+  # Install roles from Ansible Galaxy.
+  - name: cloudalchemy.prometheus
+    version: 2.16.2
+  - name: cloudalchemy.grafana
+    version: 0.18.0
+  - name: cloudalchemy.node_exporter
+    version: 0.22.0

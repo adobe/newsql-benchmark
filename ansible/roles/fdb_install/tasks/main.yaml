@@ -1,0 +1,60 @@
+- name: Stop service FDB if running
+  become: "true"
+  service:
+    name: foundationdb
+    state: stopped
+  ignore_errors: true
+
+- name: Get ephemeral NVMe block devices
+  shell: "lsblk -l | grep nvme | cut -d ' ' -f 1"
+  register: nvme_devices
+
+- name: Delete directories for logs
+  command: sudo rm -rf /var/log/foundationdb
+  ignore_errors: true
+
+- name: Delete directories for data
+  command: "sudo rm -rf /mount/{{item}}/foundationdb/*"
+  loop: "{{ nvme_devices.stdout_lines|list }}"
+  ignore_errors: true
+
+- name: Create log directories
+  command: "sudo mkdir -p /var/log/foundationdb/{{item}}"
+  with_sequence: 4500-4520
+  ignore_errors: true
+
+- name: Remove foundationdb-server
+  command: sudo dpkg -P foundationdb-server
+
+- name: Remove foundationdb-clients
+  command: sudo dpkg -P foundationdb-clients
+
+- name: Download FDB client package
+  get_url:
+    url: "{{ fdb_client_installer_url }}"
+    dest: "{{home_dir}}"
+
+- name: Install FDB client package
+  become: "true"
+  apt: deb="{{fdb_client_deb_path}}"
+
+- name: Download FDB server package
+  get_url:
+    url: "{{ fdb_server_installer_url }}"
+    dest: "{{home_dir}}"
+
+- name: Install FDB server package
+  become: "true"
+  apt: deb="{{fdb_server_deb_path}}"
+
+- name: set log directory permissions
+  command: "sudo chown -R foundationdb:foundationdb /var/log/foundationdb"
+  become: true
+
+- name: copy file from local to remote with owner, group and file permissions (symbolic)
+  copy:
+    src: run-fdb-prometheus-exporter.sh
+    dest: "{{ home_dir }}/run-fdb-prometheus-exporter.sh"
+    owner: "{{ real_user }}"
+    group: "{{ real_user }}"
+    mode: u=rwx,g=rx,o=rx

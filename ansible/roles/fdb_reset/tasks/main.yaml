@@ -1,0 +1,6 @@
+- name: Clear all data from DB
+  become: true
+  shell: 'fdbcli --exec ''writemode on; clearrange "" ""ff'''
+  run_once: True
+
+# todo: wait for DB to be healthy (migrations to complete)

@@ -1,0 +1,79 @@
+---
+- hosts: [as]
+  roles:
+    - common
+    - tidb_install
+    - tidb_deploy_ntp
+
+- hosts: localhost
+  vars:
+    lista: "{{ groups['as_private'] }}"
+  tasks:
+    - debug: msg="{{ item }}"
+      with_items:
+        - "{{ groups['as_private'] }}"
+
+    - name: Generate tidb topology
+      template:
+        src: templates/tidb_topology.j2
+        dest: tidb_topology.yaml
+
+- hosts: control[0]
+  tasks:
+  - name: Copy tidb_topology
+    copy:
+      src: tidb_topology.yaml
+      dest: ~/tidb_topology.yaml
+
+  - name: Copy tidb_script
+    copy:
+      src: scripts/tiup_install.sh
+      dest: ~/tiup_install.sh
+      owner: fdb
+      mode: a+x
+
+  - name: Copy ssh key
+    copy:
+      src: ../terraform/out/id_rsa_tf
+      dest: ~/.ssh/id_rsa_tf
+      owner: fdb
+
+- hosts: control[0]
+  roles:
+    - common
+    - tidb_cluster_install
+
+
+- hosts: as[0]
+  tasks:
+    - name: install haproxy
+      become: "true"
+      apt:
+        pkg:
+          - haproxy
+    - name: Generate haproxy config
+      become: true
+      template:
+        src: templates/haproxy.cfg.j2
+        dest: /etc/haproxy/haproxy.cfg
+    - name: restart haproxy server
+      service: name=haproxy state=restarted enabled=yes
+
+- hosts: control[0]
+  roles:
+    - tidb_client_install
+    - tidb_create_table
+
+- hosts: [loadgen]
+  roles:
+    - common
+    - tidb_client_install
+    - tidb_configure_loadgen
+    - loadgen_ycsb_common
+    - loadgen_ycsb_jdbc
+
+- hosts: [as]
+  roles:
+    - common
+    - tidb_install
+    - tidb_deploy_ntp

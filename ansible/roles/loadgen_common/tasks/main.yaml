@@ -1,0 +1,4 @@
+- name: Create dir for loadgen logs
+  file:
+    path: "{{loadgen_log_file_basepath}}"
+    state: directory

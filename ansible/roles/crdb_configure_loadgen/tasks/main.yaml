@@ -1,0 +1,22 @@
+
+- name: copy file from local to remote with owner, group and file permissions (symbolic)
+  copy:
+    src: ycsb-fdb.sh
+    dest: "{{ home_dir }}/ycsb-fdb.sh"
+    owner: "{{ real_user }}"
+    group: "{{ real_user }}"
+    mode: u=rwx,g=rx,o=rx
+
+- name: Run script to install ycsb
+  command: sudo sh {{ home_dir }}/ycsb-fdb.sh
+
+- name: copy db.properties file to each load gen machine
+  vars:
+    loadgen_private_ips: "{{groups['loadgen_private']}}"
+    crdb_lb: "{{ groups['as_private'][0] }}"
+  template:
+    src: crdb.db.properties.j2
+    dest: "{{ home_dir }}/crdb.properties"
+
+- name: copy postgres jar file from binding directory to jdbc binding directory
+  shell: 'sudo cp {{ ycsb_dir }}/postgrenosql-binding/lib/postgresql-9.4.1212.jre7.jar {{ ycsb_dir }}/jdbc-binding/lib/'

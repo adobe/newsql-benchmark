@@ -1,0 +1,6 @@
+ubuntu_version: '16.04'
+crdb_version: '20.1.7'
+
+crdb_server_installer_url: "https://binaries.cockroachdb.com/cockroach-${crdb_version}.linux-amd64.tgz"
+crdb_installer_path: "{{home_dir}}/"
+usr_local_dir: '/usr/local/bin'

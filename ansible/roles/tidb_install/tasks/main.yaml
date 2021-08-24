@@ -1,0 +1,106 @@
+- name: Check that the somefile.conf exists
+  stat:
+    path: "{{ home_dir}}/tidb.partitioning.DONE"
+  register: done_file_stat_result
+- debug: "Done file exists = {{not done_file_stat_result.stat.exists}}"
+
+- when: not done_file_stat_result.stat.exists
+  block:
+    - name: Get ephemeral NVMe block devices
+      shell: "lsblk -l | grep nvme | grep -v p1 | cut -d ' ' -f 1"
+      register: nvme_devices
+
+    - name: Prepare Storage Device List
+      set_fact:
+        storage_devices: "{{ nvme_devices.stdout_lines|list|sort }}"
+
+    - name: UnMount partitions
+      become: true
+      command: sudo umount -l {{data_dir}}
+      ignore_errors: true
+
+    - name: fstab Get partition UUID
+      become: true
+      shell: "blkid -s UUID -o value /dev/{{ item }}p1"
+      loop: "{{ storage_devices }}"
+      register: fstab_blkid_out
+      ignore_errors: true
+
+    - name: fstab Prepare UUID list
+      set_fact:
+        fstabUuidList: "{{item.stdout_lines|list|sort }}"
+      loop: "{{ fstab_blkid_out.results }}"
+
+    - name: fstab Comment out UUID the nodelalloc mount options
+      become: true
+      replace:
+        path: /etc/fstab
+        regexp: "^UUID={{ item }}"
+        replace: "#UUID={{ item }}"
+      loop: "{{ fstabUuidList }}"
+
+
+    - name: Delete directories
+      become: true
+      command: sudo rm -rf {{data_dir}}
+      loop: "{{ storage_devices }}"
+      ignore_errors: true
+
+
+    - name: Delete old 1 partitions on NVMe disks
+      command: sudo parted --script /dev/{{ item }} rm 1
+      become: true
+      loop: "{{ storage_devices }}"
+      ignore_errors: true
+
+    - name: Create 1 partitions on NVMe disks
+      command: sudo parted --script -a optimal /dev/{{ item }} mklabel gpt -- mkpart primary ext4 1 -1
+      become: true
+      loop: "{{ storage_devices }}"
+      ignore_errors: false
+
+
+    - name: Format ext4 partition on NVMe disks
+      command: mkfs.ext4 -F /dev/{{ item }}p1
+      become: true
+      loop: "{{ storage_devices }}"
+      ignore_errors: true
+
+    - name: Get partition UUID
+      become: true
+      shell: "blkid -s UUID -o value /dev/{{ item }}p1"
+      loop: "{{ storage_devices }}"
+      register: blkid_out
+      ignore_errors: true
+
+    - name: Prepare UUID list
+      set_fact:
+        uuidList: "{{item.stdout_lines|list|sort }}"
+      loop: "{{ blkid_out.results }}"
+
+    - name: Add the nodelalloc mount options
+      become: true
+      lineinfile:
+        path: /etc/fstab
+        regexp: "^UUID={{ item }}"
+        line: "UUID={{ item }}  {{ data_dir }} ext4 defaults,nodelalloc,noatime 0 2 "
+      loop: "{{ uuidList }}"
+
+    - name: Create directories for mount
+      become: true
+      command: sudo mkdir -p {{ data_dir }}
+      ignore_errors: true
+
+    - name: Mount partitions
+      become: true
+      command: sudo mount -a
+      ignore_errors: true
+
+    - name: Fix directories permissions
+      become: true
+      command: sudo chmod uga+rwx {{ data_dir }}
+
+    - name: Create a marker file denoting that partitioning has been completed
+      file:
+        path: "{{ home_dir}}/tidb.partitioning.DONE"
+        state: touch

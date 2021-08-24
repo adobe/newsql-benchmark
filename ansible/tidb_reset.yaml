@@ -1,0 +1,12 @@
+---
+- hosts: control[0]
+  roles:
+    - common
+    - tidb_create_table
+
+- hosts: control[0]
+  tasks:
+  - name: Remove tiup marker
+    file:
+      path: ~/tidb.tiup_cluster.DONE
+      state: absent

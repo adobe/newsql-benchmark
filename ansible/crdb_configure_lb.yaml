@@ -1,0 +1,33 @@
+---
+#configure first node in database servers to be load balancer
+- hosts: as[0]
+  gather_facts: yes
+  roles:
+    - common
+    - crdb_common
+    - crdb_configure_lb
+  tasks:
+
+
+#copy db.properties file to all loadgen machine
+- hosts: [loadgen]
+  gather_facts: yes
+  roles:
+    - common
+    - common_install
+    - crdb_common
+    - crdb_configure_loadgen
+  tasks:
+
+# use first loadgen machine to create usertable
+- hosts: loadgen[0]
+  gather_facts: yes
+  roles:
+    - common
+    - crdb_common
+    - loadgen_ycsb_common
+    - crdb_create_table
+  tasks:
+
+
+# todo: wait for DB to be fully operational

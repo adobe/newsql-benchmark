@@ -1,0 +1,46 @@
+---
+- hosts: [loadgen]
+  roles:
+    - common
+  tasks:
+    - name: Creates directory
+      file:
+        path: "{{home_dir}}/results"
+        state: directory
+
+    - name: Compress contents of loadgen log file directory
+      become: yes
+      archive:
+        path: "{{home_dir}}/loadgen/"
+        dest: "{{home_dir}}/results/loadgen-logs-{{ ansible_default_ipv4.address }}-{{ ansible_date_time.iso8601 }}.tar.gz"
+        format: gz
+
+    - name: Store file into ~/results
+      fetch:
+        src: "{{home_dir}}/results/loadgen-logs-{{ ansible_default_ipv4.address }}-{{ ansible_date_time.iso8601 }}.tar.gz"
+        dest: "~/fetch_tmp/"
+        flat: yes
+
+- hosts: [control]
+  roles:
+    - common
+  tasks:
+    - name: Archive contents of harness working directory into the results directory
+      become: yes
+      archive:
+        path: "{{home_dir}}/harness"
+        dest: "{{home_dir}}/results/harness-working-dir-{{ ansible_date_time.iso8601 }}.tar.gz"
+        format: gz
+
+    - name: Archive contents of harness working directory into the results directory
+      become: yes
+      archive:
+        path: "{{home_dir}}/fetch_tmp/*"
+        dest: "{{home_dir}}/results/loadgen-logs-{{ ansible_date_time.iso8601 }}.tar.gz"
+        format: gz
+
+    - name: Delete tmp directory
+      file:
+        path: "{{home_dir}}/fetch_tmp"
+        state: absent
+

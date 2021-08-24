@@ -1,0 +1,5 @@
+
+- name: create usertable under ycsb database
+  shell: 'java -cp {{ ycsb_dir }}/jdbc-binding/lib/jdbc-binding-0.17.0.jar:{{ ycsb_dir }}/postgrenosql-binding/lib/postgresql-9.4.1212.jre7.jar site.ycsb.db.JdbcDBCreateTable -p fieldcount=20 -P {{ home_dir }}/crdb.properties -n usertable'
+
+

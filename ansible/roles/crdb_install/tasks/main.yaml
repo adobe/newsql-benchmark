@@ -1,0 +1,31 @@
+- name: Delete directories for log
+  command: sudo rm -rf /var/log/cockroachdb
+
+- name: check installed cockroach
+  stat:
+    path: /usr/local/bin/cockroach
+  register: installed_binary
+
+- name: copy file from local to remote with owner, group and file permissions (symbolic)
+  copy:
+    src: install-crdb.sh
+    dest: "{{ home_dir }}/install-crdb.sh"
+    owner: "{{ real_user }}"
+    group: "{{ real_user }}"
+    mode: u=rwx,g=rx,o=rx
+
+- name: Run script to install crdb
+  become: true
+  shell: "sh {{ home_dir }}/install-crdb.sh"
+  when: not installed_binary.stat.exists
+
+- name: copy configure-time file from local to remote with owner, group and file permissions (symbolic)
+  copy:
+    src: configure-time.sh
+    dest: "{{ home_dir }}/configure-time.sh"
+    owner: "{{ real_user }}"
+    group: "{{ real_user }}"
+    mode: u=rwx,g=rx,o=rx
+
+- name: Run script to configure time sync
+  command: sudo sh {{ home_dir }}/configure-time.sh

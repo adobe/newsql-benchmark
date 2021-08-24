@@ -1,0 +1,8 @@
+---
+- hosts: [as]
+  roles:
+    - common
+    - common_install
+    - crdb_common
+    - crdb_install
+  tasks:

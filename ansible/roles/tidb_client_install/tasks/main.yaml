@@ -1,0 +1,3 @@
+- name: tidb install client
+  become: true
+  command: sudo apt install mysql-client-core-5.7

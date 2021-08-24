@@ -1,0 +1,49 @@
+
+- name: check installed cockroach
+  stat:
+    path: /usr/local/bin/cockroach
+  register: installed_binary
+
+- name: copy file from local to remote with owner, group and file permissions (symbolic)
+  copy:
+    src: install-crdb.sh
+    dest: "{{ home_dir }}/install-crdb.sh"
+    owner: "{{ real_user }}"
+    group: "{{ real_user }}"
+    mode: u=rwx,g=rx,o=rx
+
+- name: Run script to install crdb
+  become: true
+  shell: "sh {{ home_dir }}/install-crdb.sh"
+  when: not installed_binary.stat.exists
+
+- name: Look for the "haproxy" process
+  shell: 'ps -ef | grep haproxy | grep -v grep'
+  ignore_errors: true
+  register: process_list
+  changed_when: false
+
+
+- name: install haproxy
+  become: "true"
+  apt:
+    pkg:
+    - haproxy
+
+- name: Generate haproxy config
+  become: true
+  template:
+    src: templates/haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+
+- name: start haproxy server
+  service: name=haproxy state=started enabled=yes
+
+- name: Get running processes
+  shell: "ps -ef | grep -v grep | grep -w haproxy | awk '{print $2}'"
+  register: running_processes
+
+- name: Kill running processes
+  shell: "sudo kill -9 {{ item }}"
+  ignore_errors: true
+  with_items: "{{ running_processes.stdout_lines }}"

@@ -1,0 +1,16 @@
+- name: Install a list of packages
+  become: "true"
+  apt:
+    pkg:
+      - python3
+
+- name: copy file from local to remote with owner, group and file permissions (symbolic)
+  copy:
+    src: install-harness.sh
+    dest: "{{ home_dir }}/install-harness.sh"
+    owner: "{{ real_user }}"
+    group: "{{ real_user }}"
+    mode: u=rwx,g=rx,o=rx
+
+- name: Run script to install harness
+  command: sudo sh {{ home_dir }}/install-harness.sh

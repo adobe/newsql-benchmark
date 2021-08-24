@@ -1,0 +1,85 @@
+- name: Check that the somefile.conf exists
+  stat:
+    path: "{{ home_dir}}/partitioning.DONE"
+  register: done_file_stat_result
+- debug: "Done file exists = {{not done_file_stat_result.stat.exists}}"
+
+- when: not done_file_stat_result.stat.exists
+  block:
+    - name: Get ephemeral NVMe block devices
+      shell: "lsblk -l | grep nvme | cut -d ' ' -f 1"
+      register: nvme_devices
+
+    - name: Get managed SSD block devices
+      shell: "lsblk -l | grep {{managed_disk_size}} | cut -d ' ' -f 1"
+      register: managed_ssd_devices
+
+    - name: Merge the two lists
+      set_fact:
+        storage_devices: "{{ nvme_devices.stdout_lines|list|sort + managed_ssd_devices.stdout_lines|list|sort }}"
+    - debug: var=storage_devices
+
+    - name: UnMount partitions
+      command: sudo umount -l /mount/{{ item }}
+      loop: "{{ storage_devices }}"
+      ignore_errors: true
+
+    - name: Delete directories for mount
+      command: sudo rm -rf /mount/{{ item }}
+      loop: "{{ storage_devices }}"
+      ignore_errors: true
+
+    - name: Delete old 1 partitions on NVMe disks
+      command: sudo parted --script /dev/{{ item }} rm 1
+      become: true
+      loop: "{{ storage_devices }}"
+      ignore_errors: true
+
+    - name: copy file from local to remote with owner, group and file permissions (symbolic)
+      copy:
+        src: ssd-prep.sh
+        dest: "{{ home_dir }}/ssd-prep.sh"
+        owner: "{{ real_user }}"
+        group: "{{ real_user }}"
+        mode: u=rwx,g=rx,o=rx
+
+    - name: Run script to prep SSD
+      become: true
+      vars:
+        cmd: "sh {{ home_dir }}/ssd-prep.sh {{ storage_devices }} >> {{ home_dir }}/ssd-prep.out"
+      shell: "{{ cmd }}"
+      register: out
+      async: 100000000
+      poll: 0
+    - debug: var=cmd
+
+    - name: Create 1 partitions on NVMe disks
+      command: sudo parted --script /dev/{{ item }} mklabel gpt mkpart primary 0% 100%
+      become: true
+      loop: "{{ storage_devices }}"
+      ignore_errors: false
+
+    - name: Create XFS partition on NVMe disks
+      command: mkfs.xfs -f -d 'su=2m,sw=1' /dev/{{ item }}
+      become: true
+      loop: "{{ storage_devices }}"
+      ignore_errors: true
+
+    - name: Create directories for mount
+      command: sudo mkdir -p /mount/{{ item }}
+      loop: "{{ storage_devices }}"
+      ignore_errors: true
+
+    - name: Mount partitions
+      command: sudo mount -o dax /dev/{{ item }} /mount/{{ item }}
+      loop: "{{ storage_devices }}"
+      ignore_errors: true
+
+    - name: Fix directories permissions
+      command: sudo chmod uga+rwx /mount/{{ item }}
+      loop: "{{ storage_devices }}"
+
+    - name: Create a marker file denoting that partitioning has been completed
+      file:
+        path: "{{ home_dir}}/partitioning.DONE"
+        state: touch

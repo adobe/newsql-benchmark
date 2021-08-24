@@ -1,0 +1,73 @@
+ubuntu_version: '16.04'
+fdb_version: '6.2.27'
+fdb_server_installer_url: "https://www.foundationdb.org/downloads/{{ fdb_version }}/ubuntu/installers/foundationdb-server_{{ fdb_version }}-1_amd64.deb"
+fdb_client_installer_url: "https://www.foundationdb.org/downloads/{{ fdb_version }}/ubuntu/installers/foundationdb-clients_{{ fdb_version }}-1_amd64.deb"
+fdb_installer_path: "{{home_dir}}/"
+fdb_server_deb_path: "{{home_dir}}/foundationdb-server_{{ fdb_version }}-1_amd64.deb"
+fdb_client_deb_path: "{{home_dir}}/foundationdb-clients_{{ fdb_version }}-1_amd64.deb"
+
+fdb_replication_factor: 'triple'
+fdb_data_dir: '/mount/nvme0n1/foundationdb'
+fdb_log_dir: '/var/log/foundationdb'
+
+fdb_cluster_size_dependent_props:
+  "1":
+    proxies: default
+    logs: default
+    process_classes: [["stateless", "", "", "", "", "", "", ""]]
+  "2":
+    proxies: default
+    logs: default
+    process_classes: [["", "", "", "", "", "", "", ""], ["", "", "", "", "", "", "", ""]]
+  "3":
+    proxies: default
+    logs: default
+    process_classes: [["", "", "", "", "", "", "", ""],["", "", "", "", "", "", "", ""], ["", "", "", "", "", "", "", ""]]
+  "4":
+    proxies: default
+    logs: default
+    process_classes: [["", "", "", "", "", "", "", ""],["", "", "", "", "", "", "", ""], ["", "", "", "", "", "", "", ""]]
+  "5":
+    proxies: 3
+    logs: 3
+    process_classes: [["proxy", "proxy", "proxy", "log", "log", "log", "stateless","stateless"],
+                      ["storage", "storage", "storage", "storage", "storage", "storage", "storage", "storage","stateless"],
+                      ["storage", "storage", "storage", "storage", "storage", "storage", "storage", "storage","stateless"],
+                      ["storage", "storage", "storage", "storage", "storage", "storage", "storage", "storage","stateless"],
+                      ["storage", "storage", "storage", "storage", "storage", "storage", "storage", "storage","stateless"]]
+  "large_8_proxy_8_logs":
+    proxies: 8
+    logs: 8
+    process_classes: [["", "", "", "", "", "", "", ""],
+                      ["", "", "", "", "proxy", "proxy", "proxy", "proxy"],
+                      ["", "", "", "", "proxy", "proxy", "proxy", "proxy"],
+                      ["log", "log", "log", "log", "log", "log", "log", "log"],
+                      ["storage", "storage", "storage", "storage", "storage", "storage", "storage", "storage"]]
+  "large_8_proxy_8_logs_v2":
+    proxies: 8
+    logs: 8
+    process_classes: [["stateless", "proxy", "resolver", "log", "log", "storage", "storage", "storage"],
+                      ["stateless", "proxy", "resolver", "log", "log", "storage", "storage", "storage"],
+                      ["stateless", "proxy", "resolver", "log", "log", "storage", "storage", "storage"],
+                      ["stateless", "proxy", "resolver", "log", "log", "storage", "storage", "storage"],
+                      ["stateless", "proxy", "log", "log", "storage", "storage", "storage", "storage", "log"],
+                      ["stateless", "proxy", "log", "log", "storage", "storage", "storage", "storage", "log"],
+                      ["stateless", "proxy", "log", "log", "storage", "storage", "storage", "storage", "log"],
+                      ["stateless", "proxy", "log", "log", "storage", "storage", "storage", "storage", "log"]]
+  "large_8_proxy_8_logs_v3":
+    proxies: 8
+    logs: 8
+    process_classes: [["coordinator","cluster_controller","ratekeeper", "master","log", "log", "proxy","proxy"],
+                      ["coordinator", "resolver","log", "log","proxy","proxy"],
+                      ["coordinator","log", "log", "log", "log", "proxy", "proxy"],
+                      ["log", "log", "log", "log","proxy","proxy"]]
+fdb_node_id: "{{groups['as'].index(inventory_hostname)|int}}"
+fdb_node_count: "{{groups['as']|length}}"
+fdb_node_prop_key: "{{ (fdb_node_count|int <= 5) | ternary(fdb_node_count,'large_8_proxy_8_logs_v2') }}"
+fdb_proxies: "{{fdb_cluster_size_dependent_props[fdb_node_prop_key]['proxies']}}"
+fdb_logs: "{{fdb_cluster_size_dependent_props[fdb_node_prop_key]['logs']}}"
+fdb_all_storage: ["storage", "storage", "storage", "storage","storage", "storage", "storage", "storage"]
+fdb_roles: "{{fdb_cluster_size_dependent_props[fdb_node_prop_key]['process_classes'][fdb_node_id|int] | default(fdb_all_storage)}}"
+
+fdb_roles_defined_count: "{{ fdb_cluster_size_dependent_props[fdb_node_prop_key]['process_classes'] | length}}"
+fdb_roles_defined_role_count: "{{ fdb_cluster_size_dependent_props[fdb_node_prop_key]['process_classes'] | length}}"

@@ -1,0 +1,5 @@
+real_user: fdb
+replication_factor: 3
+memory_size: '120G'
+managed_disk_size: '1T'
+disks_per_vm: 0

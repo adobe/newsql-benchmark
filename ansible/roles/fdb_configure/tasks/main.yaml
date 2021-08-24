@@ -1,0 +1,10 @@
+- name: Configure FDB Config file
+  vars:
+    public_address: "{{ ansible_default_ipv4.address}}"
+  become: true
+  template:
+    src: foundationdb.conf.j2
+    dest: /etc/foundationdb/foundationdb.conf
+
+- debug: var=fdb_roles
+- debug: var=fdb_roles_2
