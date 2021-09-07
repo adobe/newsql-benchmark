@@ -21,7 +21,7 @@ This project provides an automated framework for benchmarking NewSQL databases.
 
 ### Installation
 
-see Instructions.md
+see [Instructions](Instructions.md)
 
 ### Usage
 
