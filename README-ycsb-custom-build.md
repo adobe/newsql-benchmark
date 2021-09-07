@@ -1,4 +1,4 @@
-Steps to run custom YCSB build
+#Steps to run custom YCSB build
 
  ## checkout the repo on local machine
  git clone https://github.com/brianfrankcooper/YCSB.git
