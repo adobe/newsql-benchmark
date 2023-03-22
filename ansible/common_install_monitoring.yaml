@@ -28,6 +28,5 @@
         datasource: 'Prometheus'
     grafana_security:
       admin_user: admin
-      admin_password: password
   tasks:
     - debug: var=node_list
