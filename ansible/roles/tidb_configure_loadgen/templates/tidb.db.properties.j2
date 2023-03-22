@@ -1,0 +1,24 @@
+## db.properties
+##
+
+
+db.driver=com.mysql.jdbc.Driver
+db.url=jdbc:mysql://{{ groups["as_private"][0] }}:5000/test
+
+db.user=root
+db.passwd=
+
+# The batch size for doing batched inserts. Defaults to 0. Set to >0 to use batching.
+db.batchsize=1000
+
+# JDBC fetch size hinted to the driver.
+jdbc.fetchsize=10
+
+# The JDBC connection auto-commit property for the driver.
+jdbc.autocommit=true
+
+# Use addBatch()/executeBatch() JDBC methods instead of executeUpdate() for writes (default: false)
+jdbc.batchupdateapi=true
+
+# The number of rows to be batched before commit (or executeBatch() when jdbc.batchupdateapi=true)
+db.batchsize=1000

@@ -1,0 +1,23 @@
+- name: Wait for running loadgen programs to complete 1
+  shell: "ps -elf | grep '/usr/bin/java -classpath /home/fdb/ycsb' | grep -v grep | wc -l"
+  register: loadgen_process_count_first
+- debug: var=loadgen_process_count_first
+
+- name: Wait for running loadgen programs to complete 2
+  shell: "ps -elf | grep '/usr/bin/java -classpath /home/fdb/ycsb' | grep -v grep | wc -l"
+  register: loadgen_process_count
+  until: loadgen_process_count.stdout == "0"
+  retries: 60
+  delay: 10
+
+- set_fact:
+    global_process_count: "{{ (ansible_play_hosts_all|
+                          map('extract', hostvars, ['loadgen_process_count', 'stdout'])|
+                          map('int')|
+                          sum)}}"
+  run_once: true
+
+- name: Check if all benchmarks have completed (all servers)
+  debug: var=global_process_count
+  run_once: true
+  failed_when: global_process_count|int > 0

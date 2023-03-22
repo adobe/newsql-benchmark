@@ -1,0 +1,248 @@
+---
+- hosts: as
+  roles:
+    - common
+    - fdb_common
+    - fdb_install
+  tasks:
+    - name: Stop service FDB on all  servers
+      become: true
+      service:
+        name: foundationdb
+        state: stopped
+    - name: Get ephemeral NVMe block devices
+      shell: "lsblk -l | grep nvme | cut -d ' ' -f 1"
+      register: nvme_devices
+
+    - name: Delete directories for data
+      command: "sudo rm -rf /mount/{{item}}/*"
+      loop: "{{ nvme_devices.stdout_lines|list }}"
+      ignore_errors: true
+
+- hosts: as[0]
+  roles:
+    - common
+    - fdb_common
+  tasks:
+    - name: Configure FDB Cluster file
+      become: true
+      copy:
+        dest: "/etc/foundationdb/fdb.cluster"
+        content: '3lNzewdi:kddXnnoj@127.0.0.1:4500'
+
+    - name: Configure FDB Config file
+      become: true
+      template:
+        src: foundationdb2.conf.j2
+        dest: /etc/foundationdb/foundationdb.conf
+      vars:
+        public_address: "127.0.0.1"
+        fdb_roles_2: ["","","","","","","",""]
+
+    - name: Get ephemeral NVMe block devices
+      shell: "lsblk -l | grep nvme | cut -d ' ' -f 1"
+      register: nvme_devices
+
+    - name: Start service FDB on first server
+      become: true
+      service:
+        name: foundationdb
+        state: started
+
+    - name: Sleep 3s
+      command: "sleep 5"
+
+    - name: Delete directories for data
+      command: "sudo rm -rf /mount/{{item}}/*"
+      loop: "{{ nvme_devices.stdout_lines|list }}"
+      ignore_errors: true
+
+    - name: Sleep 3s
+      command: "sleep 5"
+
+    - name: Configure new DB 3
+      become: true
+      shell: 'timeout 10 fdbcli --exec "configure new single ssd"'
+      register: config_single_ssd_status
+      ignore_errors: true
+
+    - name: Configure new DB 4
+      become: true
+      shell: 'timeout 10 fdbcli --exec "configure single ssd"'
+      when: config_single_ssd_status.rc != 0
+      register: c4
+
+    - name: Change to internal IP
+      become: true
+      shell: "/usr/lib/foundationdb/make_public.py -a {{groups['as_private'][0]}}"
+      ignore_errors: true
+
+    - name: Configure FDB Config file
+      become: true
+      template:
+        src: foundationdb2.conf.j2
+        dest: /etc/foundationdb/foundationdb.conf
+      vars:
+        public_address: "{{ groups['as_private'][0]}}"
+        fdb_roles_2: ["","","","","","","",""]
+
+    - name:  DB Status
+      become: true
+      shell: 'fdbcli --exec "status"'
+      register: fdbstatus
+
+    - debug:
+        msg: "FDB Status = {{fdbstatus}}"
+
+    - name: Wait for DB to be fully operational
+      shell: 'fdbcli --exec status | grep Replication | cut -d- -f2'
+      retries: 60
+      delay: 5
+      register: result
+      until: result.stdout.strip() == 'Healthy'
+
+    - name: fetch cluster file from first server
+      fetch:
+        src: /etc/foundationdb/fdb.cluster
+        dest: /tmp
+
+- hosts: as[1:]
+  roles:
+    - common
+    - fdb_common
+  tasks:
+    - name: copy the cluster file to all servers
+      become: "true"
+      copy:
+        src: "/tmp/{{groups['as'][0]}}/etc/foundationdb/fdb.cluster"
+        dest: /etc/foundationdb/fdb.cluster
+
+    - name: Configure FDB Config file
+      vars:
+        public_address: "{{ ansible_default_ipv4.address}}"
+        fdb_node_id: "{{groups['as'].index(inventory_hostname)|int}}"
+        fdb_roles_2: "{{fdb_roles}}"
+      become: true
+      template:
+        src: foundationdb2.conf.j2
+        dest: /etc/foundationdb/foundationdb.conf
+
+    - name: Start service FDB on all servers
+      become: "true"
+      service:
+        name: foundationdb
+        state: started
+
+- hosts: as[0]
+  roles:
+    - common
+    - fdb_common
+  tasks:
+    - name: Delete directories for data
+      command: "sudo rm -rf /mount/{{item}}/*"
+      loop: "{{ nvme_devices.stdout_lines|list }}"
+      ignore_errors: true
+
+    - name: Sleep 5s
+      command: "sleep 5"
+
+    - name: Configure new DB 2
+      become: true
+      shell: 'timeout 5 fdbcli --exec "configure new single ssd"'
+      register: configure_status
+      ignore_errors: true
+
+    - name: Delete directories for data
+      command: "sudo rm -rf /mount/{{item}}/foundationdb/"
+      loop: "{{ nvme_devices.stdout_lines|list }}"
+      ignore_errors: true
+      when: configure_status.rc != 0
+
+    - name: List data directories
+      command: "sudo ls -la /mount/{{item}}/foundationdb/"
+      loop: "{{ nvme_devices.stdout_lines|list }}"
+      register: ls_out
+      ignore_errors: true
+    - debug: var=ls_out.stdout
+
+    - name: Sleep 5s
+      command: "sleep 5"
+      when: configure_status.rc != 0
+
+    - name: Configure new DB 3
+      become: true
+      shell: 'timeout 5 fdbcli --exec "configure new single ssd"'
+      when: configure_status.rc != 0
+      retries: 10
+      delay: 5
+
+    - name: Configure FDB Config file
+      vars:
+        public_address: "{{ ansible_default_ipv4.address}}"
+        fdb_roles_2: "{{fdb_roles}}"
+      become: true
+      template:
+        src: foundationdb2.conf.j2
+        dest: /etc/foundationdb/foundationdb.conf
+
+    - name: Configure DB
+      become: true
+      shell: 'fdbcli --exec "configure proxies={{fdb_proxies}}"'
+      when: fdb_proxies != 'default'
+      retries: 60
+      delay: 5
+
+    - name: Configure DB 2
+      become: true
+      shell: 'fdbcli --exec "configure logs={{fdb_logs}}"'
+      when: fdb_logs != 'default'
+
+    - name: Configure DB 3
+      become: true
+      shell: 'fdbcli --exec "configure {{fdb_replication_factor}} ssd"'
+
+    - name: Wait for DB to be fully operational - Replication status
+      shell: 'fdbcli --exec status | grep Replication | cut -d- -f2'
+      retries: 60
+      delay: 5
+      register: result
+      until: result.stdout.strip() == 'Healthy'
+
+    #    - name: Wait for DB to be fully operational - Process Count
+    #      vars:
+    #        expected_process_count: '{{ (groups["as"]|
+    #                              map("extract", hostvars, ["fdb_roles"])|
+    #                              map("length")|
+    #                              sum)}}'
+    #        expected_process_count2: '{{ (groups["as"]|length) * cores_per_machine}}'
+    #      shell: 'fdbcli --exec status | grep "FoundationDB processes" | cut -d- -f2'
+    #      retries: 60
+    #      delay: 5
+    #      register: result
+    #      until: result.stdout.strip() == expected_process_count
+
+    - name: Configure new DB 4
+      become: true
+      shell: 'fdbcli --exec "status"'
+      register: fdbstatus2
+
+    - debug:
+        msg: "FDB Status = {{fdbstatus2.stdout_lines}}"
+
+    - name: Start FDB metrics exporter
+      become: true
+      shell: 'sh {{ home_dir }}/run-fdb-prometheus-exporter.sh'
+
+- hosts: loadgen
+  tasks:
+    - name: Create /etc/foundationdb/ dir
+      become: "true"
+      file:
+        path: /etc/foundationdb
+        state: directory
+
+    - name: copy the cluster file to all servers
+      become: "true"
+      copy:
+        src: "/tmp/{{groups['as'][0]}}/etc/foundationdb/fdb.cluster"
+        dest: /etc/foundationdb/fdb.cluster

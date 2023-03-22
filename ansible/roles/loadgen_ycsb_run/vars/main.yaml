@@ -1,0 +1,16 @@
+ycsb_operation: '{{ "load" if loadgen_workload_name == "insert" else "run"}}'
+ycsb_workload_name: '{{ "workloada" if loadgen_workload_name == "insert" else "workloadb"}}'
+#ycsb_insert_params: '{{ "-p insertstart={{ loadgen_start_key_per_host_process | int }}  -p insertcount={{ loadgen_keys_per_process| int }}" if loadgen_workload_name == "insert" else "run"}}'
+ycsb_insert_params: "{% if loadgen_workload_name == 'insert' %} -p insertstart={{ loadgen_start_key_per_host_process | int }} -p insertcount={{ loadgen_keys_per_process| int }} -p operationcount={{( (loadgen_keys_per_process | int) / loadgen_batch_size | int) |int}}{% else %} -p operationcount={{ ycsb_op_count }} {% endif %}"
+
+ycsb_field_count: '1'
+ycsb_field_length: '{{loadgen_value_size_bytes}}'
+
+ycsb_read_proportion: '1.0'
+ycsb_update_proportion: '0.0'
+ycsb_op_count: "{{((loadgen_keys_per_process | int) / loadgen_batch_size) |int}}"
+ycsb_max_execution_time_seconds: 300
+ycsb_additional_params: '-p requestdistribution=uniform -p maxexecutiontime={{ ycsb_max_execution_time_seconds }} -p table=usertable -p insertorder=hashed -p zeropadding=12 -p fieldlength={{ycsb_field_length}} -p fieldcount={{ycsb_field_count}}'
+ycsb_params: '{{ycsb_db_specific_params}} {{ycsb_insert_params}} -p recordcount={{loadgen_num_keys}} -p readproportion={{ycsb_read_proportion}} -p updateproportion={{ycsb_update_proportion}} {{ycsb_additional_params}} -p threadcount={{ loadgen_threads_per_process }}'
+ycsb_cmd: "sh {{ycsb_dir}}/bin/ycsb.sh {{ycsb_operation}} {{ycsb_binding_name}} -s -P {{ycsb_dir}}/workloads/{{ycsb_workload_name}} {{ycsb_params}} >> {{loadgen_log_file}} 2>&1"
+

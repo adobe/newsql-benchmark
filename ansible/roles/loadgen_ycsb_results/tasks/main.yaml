@@ -1,0 +1,226 @@
+- debug: var=loadgen_log_file
+- name: Get throughput
+  shell: 'grep ''\[OVERALL\], Throughput'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s add'
+  register: thrpt
+- debug: var=thrpt.stdout
+
+- name: Get Runtime
+  shell: 'grep -Po "RunTime\(ms\), \K\d+$" {{loadgen_log_file}} | cut -d, -f3 | jq -s max'
+  register: runtime_millis
+- debug: var=runtime_millis.stdout
+
+- name: Get operation count for Inserts
+  shell: 'grep ''\[INSERT\], Operations'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s add'
+  register: operation_count_insert
+- debug: var=operation_count_insert.stdout
+
+- name: Get error count for Inserts
+  shell: 'grep ''\[INSERT\], Return=ERROR'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s add'
+  register: error_count_insert
+- debug: var=error_count_insert.stdout
+
+- name: Get success count for Inserts
+  shell: 'grep ''\[INSERT\], Return=OK'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s add'
+  register: success_count_insert
+- debug: var=success_count_insert.stdout
+
+- name: Get unknown count for Inserts
+  shell: 'grep ''\[INSERT\], Return=UNEXPECTED_STATE'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s add'
+  register: unknown_count_insert
+- debug: var=unknown_count_insert.stdout
+
+- name: Get avg latency for Inserts
+  shell: 'grep ''\[INSERT\], AverageLatency'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s max'
+  register: avg_insert_latency
+- debug: var=avg_insert_latency.stdout
+
+- name: Get operation count for Read
+  shell: 'grep ''\[READ\], Operations'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s add'
+  register: operation_count_read
+- debug: var=operation_count_read.stdout
+
+- name: Get error count for Reads
+  shell: 'grep ''\[READ\], Return=ERROR'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s add'
+  register: error_count_read
+- debug: var=error_count_read.stdout
+
+- name: Get success count for Reads
+  shell: 'grep ''\[READ\], Return=OK'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s add'
+  register: success_count_read
+- debug: var=success_count_read.stdout
+
+- name: Get unknown count for reads
+  shell: 'grep ''\[READ\], Return=UNEXPECTED_STATE'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s add'
+  register: unknown_count_read
+- debug: var=unknown_count_read.stdout
+
+- name: Get avg latency for Reads
+  shell: 'grep ''\[READ\], AverageLatency'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s max'
+  register: avg_read_latency
+- debug: var=avg_read_latency.stdout
+
+- name: Get P95 latency for Reads
+  shell: 'grep ''\[READ\], 95thPercentileLatency'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s max'
+  register: p95_read_latency
+- debug: var=p95_read_latency.stdout
+
+- name: Get P99 latency for Reads
+  shell: 'grep ''\[READ\], 99thPercentileLatency'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s max'
+  register: p99_read_latency
+- debug: var=p99_read_latency.stdout
+
+- name: Get operation count for updates
+  shell: 'grep ''\[UPDATE\], Operations'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s add'
+  register: operation_count_update
+- debug: var=operation_count_update.stdout
+
+- name: Get error count for updates
+  shell: 'grep ''\[UPDATE\], Return=ERROR'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s add'
+  register: error_count_update
+- debug: var=error_count_update.stdout
+
+- name: Get success count for updates
+  shell: 'grep ''\[UPDATE\], Return=OK'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s add'
+  register: success_count_update
+- debug: var=success_count_update.stdout
+
+- name: Get unknown count for updates
+  shell: 'grep ''\[UPDATE\], Return=UNEXPECTED_STATE'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s add'
+  register: unknown_count_update
+- debug: var=unknown_count_update.stdout
+
+- name: Get avg latency for Updates
+  shell: 'grep ''\[UPDATE\], AverageLatency'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s max'
+  register: avg_update_latency
+- debug: var=avg_update_latency.stdout
+
+- name: Get P95 latency for Updates
+  shell: 'grep ''\[UPDATE\], 95thPercentileLatency'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s max'
+  register: p95_update_latency
+- debug: var=p95_update_latency.stdout
+
+- name: Get P99 latency for Updates
+  shell: 'grep ''\[UPDATE\], 99thPercentileLatency'' {{loadgen_log_file}} | cut -d '','' -f3 | jq -s max'
+  register: p99_update_latency
+- debug: var=p99_update_latency.stdout
+
+- set_fact:
+    loadgen_results: '{{runtime_millis.stdout}},{{thrpt.stdout}},{{operation_count_insert.stdout}},{{error_count_insert.stdout}},{{success_count_insert.stdout}},{{unknown_count_insert.stdout}},{{avg_insert_latency.stdout}},{{operation_count_read.stdout}},{{error_count_read.stdout}},{{success_count_read.stdout}},{{unknown_count_read.stdout}},{{avg_read_latency.stdout}},{{p95_read_latency.stdout}},{{p99_read_latency.stdout}},{{operation_count_update.stdout}},{{error_count_update.stdout}},{{success_count_update.stdout}},{{unknown_count_update.stdout}},{{avg_update_latency.stdout}},{{p95_update_latency.stdout}},{{p99_update_latency.stdout}}'
+
+- name: Stat the loadgen results file
+  stat:
+    path: '{{loadgen_results_file}}'
+  register: res_sym
+
+- name: Rotate the loadgen results file
+  shell: mv {{loadgen_results_file}} {{loadgen_results_file}}.{{res_sym.stat.mtime|string}}
+  when: res_sym.stat.exists
+
+- name: Write results file to each loadgen
+  vars:
+    file_contents: "{{ res_sym.stat.exists | ternary(loadgen_results, loadgen_results_header_line + '\n' + loadgen_results) }}"
+  copy:
+    content: '{{ file_contents }}'
+    dest: '{{loadgen_results_file}}'
+
+- set_fact:
+    combined_runtime_millis: "{{ (ansible_play_hosts_all
+                                      | map('extract', hostvars, ['runtime_millis', 'stdout'])
+                                      | map('int')
+                                      | max) }}"
+    combined_thrpt: "{{ (ansible_play_hosts_all
+                                      | map('extract', hostvars, ['thrpt', 'stdout'])
+                                      | map('int')
+                                      | sum) }}"
+    combined_operation_count_insert: "{{ (ansible_play_hosts_all
+                                     | map('extract', hostvars, ['operation_count_insert', 'stdout'])
+                                     | map('int')
+                                     | sum) }}"
+    combined_error_count_insert: "{{ (ansible_play_hosts_all
+                                     | map('extract', hostvars, ['error_count_insert', 'stdout'])
+                                     | map('int')
+                                     | sum) }}"
+    combined_success_count_insert: "{{ (ansible_play_hosts_all
+                                     | map('extract', hostvars, ['success_count_insert', 'stdout'])
+                                     | map('int')
+                                     | sum) }}"
+    combined_unknown_count_insert: "{{ (ansible_play_hosts_all
+                                     | map('extract', hostvars, ['unknown_count_insert', 'stdout'])
+                                     | map('int')
+                                     | sum) }}"
+    combined_avg_insert_latency: "{{ (ansible_play_hosts_all
+                                     | map('extract', hostvars, ['avg_insert_latency', 'stdout'])
+                                     | map('int')
+                                     | max) }}"
+    combined_operation_count_read: "{{ (ansible_play_hosts_all
+                                     | map('extract', hostvars, ['operation_count_read', 'stdout'])
+                                     | map('int')
+                                     | sum) }}"
+    combined_error_count_read: "{{ (ansible_play_hosts_all
+                                     | map('extract', hostvars, ['error_count_read', 'stdout'])
+                                     | map('int')
+                                     | sum) }}"
+    combined_success_count_read: "{{ (ansible_play_hosts_all
+                                     | map('extract', hostvars, ['success_count_read', 'stdout'])
+                                     | map('int')
+                                     | sum) }}"
+    combined_unknown_count_read: "{{ (ansible_play_hosts_all
+                                     | map('extract', hostvars, ['unknown_count_read', 'stdout'])
+                                     | map('int')
+                                     | sum) }}"
+    combined_avg_read_latency: "{{ (ansible_play_hosts_all
+                                     | map('extract', hostvars, ['avg_read_latency', 'stdout'])
+                                     | map('int')
+                                     | max) }}"
+    combined_p95_read_latency: "{{ (ansible_play_hosts_all
+                                     | map('extract', hostvars, ['p95_read_latency', 'stdout'])
+                                     | map('int')
+                                     | max) }}"
+    combined_p99_read_latency: "{{ (ansible_play_hosts_all
+                                     | map('extract', hostvars, ['p99_read_latency', 'stdout'])
+                                     | map('int')
+                                     | max) }}"
+    combined_operation_count_update: "{{ (ansible_play_hosts_all
+                                     | map('extract', hostvars, ['operation_count_update', 'stdout'])
+                                     | map('int')
+                                     | sum) }}"
+    combined_error_count_update: "{{ (ansible_play_hosts_all
+                                     | map('extract', hostvars, ['error_count_update', 'stdout'])
+                                     | map('int')
+                                     | sum) }}"
+    combined_success_count_update: "{{ (ansible_play_hosts_all
+                                     | map('extract', hostvars, ['success_count_update', 'stdout'])
+                                     | map('int')
+                                     | sum) }}"
+    combined_unknown_count_update: "{{ (ansible_play_hosts_all
+                                     | map('extract', hostvars, ['unknown_count_update', 'stdout'])
+                                     | map('int')
+                                     | sum) }}"
+    combined_avg_update_latency: "{{ (ansible_play_hosts_all
+                                     | map('extract', hostvars, ['avg_update_latency', 'stdout'])
+                                     | map('int')
+                                     | max) }}"
+    combined_p95_update_latency: "{{ (ansible_play_hosts_all
+                                     | map('extract', hostvars, ['p95_update_latency', 'stdout'])
+                                     | map('int')
+                                     | max) }}"
+    combined_p99_update_latency: "{{ (ansible_play_hosts_all
+                                     | map('extract', hostvars, ['p99_update_latency', 'stdout'])
+                                     | map('int')
+                                     | max) }}"
+    run_once: true
+- set_fact:
+    loadgen_results_combined: "{{loadgen_results_header_line}}\n{{combined_runtime_millis|int/1000}},{{combined_thrpt}},{{combined_error_count_insert}},{{combined_success_count_insert}},{{combined_unknown_count_insert}},{{combined_avg_insert_latency}},{{combined_error_count_read}},{{combined_success_count_read}},{{combined_unknown_count_read}},{{combined_avg_read_latency}},{{combined_p95_read_latency}},{{combined_p99_read_latency}},{{combined_error_count_update}},{{combined_success_count_update}},{{combined_unknown_count_update}},{{combined_avg_update_latency}},{{combined_p95_update_latency}},{{combined_p99_update_latency}}"
+    run_once: true
+- debug: var=loadgen_results_combined
+
+- local_action: stat path='{{loadgen_combined_results_path}}'
+  register: local_sym
+  run_once: true
+- debug: var=local_sym
+
+- local_action: shell mv {{loadgen_combined_results_path}} {{loadgen_combined_results_path}}.{{local_sym.stat.mtime|string}}
+  when: local_sym.stat.exists
+  run_once: true
+
+- local_action: copy content="{{ loadgen_results_combined }}" dest="{{loadgen_combined_results_path}}"

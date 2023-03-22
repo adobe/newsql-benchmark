@@ -1,0 +1,20 @@
+- name: Delete all large log files
+  shell: "cd ~/loadgen; find . -type f -size +50M -delete"
+
+- name: Stat the old log file
+  stat:
+    path: '{{loadgen_log_file}}'
+  register: sym
+
+- name: Rotate old log file if needed
+  command: 'mv {{loadgen_log_file}} {{loadgen_log_file}}.{{sym.stat.mtime|string}}'
+  when: sym.stat.islnk is defined
+
+- name: Start benchmark workload processes
+  vars:
+    loadgen_start_key_per_host_process: "{{item|int}}"
+  shell: "{{ ycsb_cmd }}"
+  async: 100000000
+  poll: 0
+  with_items : "{{loadgen_start_key_per_host_process_array}}"
+#- debug: var=ycsb_cmd

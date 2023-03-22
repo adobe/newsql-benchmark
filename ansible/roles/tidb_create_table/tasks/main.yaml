@@ -1,0 +1,12 @@
+- name: tidb install client
+  become: true
+  command: sudo apt install mysql-client-core-5.7
+
+- name: loadgen copy mysql createtable.sql
+  become: true
+  copy:
+    src: files/createtable.sql
+    dest: "{{home_dir}}/tidb/scripts/"
+
+- name: create usertable under ycsb database
+  shell: "mysql -u root -h {{ groups['as_private'][0] }} -P 4000 < {{home_dir}}/tidb/scripts/createtable.sql"

@@ -1,0 +1,7 @@
+---
+- hosts: [control]
+  roles:
+    - common
+    - common_install
+    - control_machine_install
+  tasks:

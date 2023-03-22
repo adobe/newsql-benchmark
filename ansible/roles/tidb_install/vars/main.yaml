@@ -1,0 +1,3 @@
+home_dir: "/home/{{ real_user }}"
+data_dir: '/data1'
+managed_disk_size: '1T'

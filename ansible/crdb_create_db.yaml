@@ -1,0 +1,82 @@
+---
+# first node in the db nodes is used as load balancer
+# second node onwards will be running cockroach servers
+- hosts: as[0]
+  gather_facts: yes
+  roles:
+    - common
+    - crdb_common
+  vars:
+    nodeid: "{{groups['as'].index(inventory_hostname)}}"
+    current_private_ip: "{{ groups['as_private'][nodeid|int] }}"
+  tasks:
+  - name: Look for the "cockroach" process
+    shell: 'ps -ef | grep cockroach | grep -v grep'
+    ignore_errors: true
+    register: process_list
+    changed_when: false
+
+  - name: Report status of service
+    debug:
+      msg: "{{ process_list.stdout.find('cockroach') }}"
+
+  - name: start cockroach server on first db server node
+    become: true
+    shell: 'cockroach start --insecure --store=path=/mount/nvme0n1,attrs=ssd --advertise-addr={{current_private_ip}} --join={{ as_private_ips | join(",") }}   --cache=.25  --max-sql-memory=.25 --background'
+    when: "process_list.stdout.find('cockroach') == -1"
+
+  - name: initialize cockroach cluster
+    become: true
+    shell: 'cockroach init --insecure --host={{as_private_ips[0]}}'
+    ignore_errors: true
+
+  - name: drop ycsb database
+    become: true
+    shell: 'cockroach sql --insecure -e="drop database if exists ycsb"'
+
+  - name: create ycsb database
+    become: true
+    shell: 'cockroach sql --insecure -e="create database if not exists ycsb"'
+
+# start cockroach process on the remaining nodes in db server list
+
+- hosts: as[1:]
+  roles:
+    - common
+    - crdb_common
+  vars:
+    nodeid: "{{groups['as'].index(inventory_hostname)}}"
+    current_private_ip: "{{ groups['as_private'][nodeid|int] }}"
+  tasks:
+    - debug: var=nodeid
+    - debug: var=as_private_ips
+    - debug: var=current_private_ip
+
+    - name: Look for the "cockroach" process
+      shell: 'ps -ef | grep cockroach | grep -v grep'
+      ignore_errors: true
+      register: process_list
+      changed_when: false
+
+    - name: Report status of service
+      debug:
+        msg: "{{ process_list.stdout.find('cockroach') }}"
+
+#    - name: stop cockroach servers on each machine
+#      become: true
+#      shell: 'cockroach quit --insecure --host={{current_private_ip}} '
+#      when: "process_list.stdout.find('cockroach') != -1"
+
+#    - name: wait for db to drain
+#      become: true
+#      shell: 'sleep 15 '
+#      when: "process_list.stdout.find('cockroach') != -1"
+
+    - name: start cockroach servers on each machine
+      become: true
+      shell: 'cockroach start --insecure --store=path=/mount/nvme0n1,attrs=ssd --advertise-addr={{current_private_ip}} --join={{ as_private_ips | join(",") }}   --cache=.25  --max-sql-memory=.25 --background'
+      when: "process_list.stdout.find('cockroach') == -1"
+
+
+
+# todo: wait for DB to be fully operational

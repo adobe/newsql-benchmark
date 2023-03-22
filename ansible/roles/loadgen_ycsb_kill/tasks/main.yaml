@@ -1,0 +1,4 @@
+- name: Kill all benchmark workload processes
+  become: true
+  shell: "pkill -f ycsb"
+  ignore_errors: true

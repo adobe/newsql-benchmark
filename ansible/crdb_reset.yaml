@@ -1,0 +1,21 @@
+---
+
+#use one of the db node (other than first one) to reset database
+- hosts: as[1]
+  gather_facts: yes
+  roles:
+    - common
+    - crdb_common
+    - crdb_reset
+  tasks: # TODO
+
+#use fist loadgen node to create usertable
+
+- hosts: loadgen[0]
+  gather_facts: yes
+  roles:
+    - common
+    - crdb_common
+    - loadgen_ycsb_common
+    - crdb_create_table
+  tasks:

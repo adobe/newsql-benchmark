@@ -1,0 +1,9 @@
+- debug: var=fdb_node_prop_key
+- debug: var=fdb_proxies
+- debug: var=fdb_logs
+- debug: var=fdb_node_count
+- debug: var=fdb_roles
+- debug: var=fdb_roles_2
+
+
+- set_fact: fdb_roles="{{ fdb_roles }}"

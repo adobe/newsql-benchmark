@@ -1,0 +1,10 @@
+ycsb_dir: '{{home_dir}}/ycsb-0.17.0'
+ycsb_binding_name: '{{loadgen_db_name}}'
+
+# For each DB, add the custom parameters in this map
+ycsb_node_id: "{{groups['loadgen'].index(inventory_hostname)|int}}"
+ycsb_db_specific_params_map:
+  fdb: '-p foundationdb.apiversion=620 -p foundationdb.clusterfile=/etc/foundationdb/fdb.cluster -p foundationdb.batchsize={{loadgen_batch_size}}'
+  crdb: '-P {{home_dir}}/crdb.properties '
+  tidb: '-P {{home_dir}}/tidb.properties'
+ycsb_db_specific_params: '{{ycsb_db_specific_params_map[loadgen_db_name]}}'

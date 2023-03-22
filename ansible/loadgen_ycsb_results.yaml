@@ -1,0 +1,7 @@
+---
+- hosts: [loadgen]
+  roles:
+    - common
+    - loadgen_common
+    - loadgen_ycsb_statuscheck
+    - loadgen_ycsb_results

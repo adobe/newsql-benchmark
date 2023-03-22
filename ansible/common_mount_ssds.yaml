@@ -1,0 +1,5 @@
+---
+- hosts: as
+  roles:
+    - common
+    - common_mount_ssd

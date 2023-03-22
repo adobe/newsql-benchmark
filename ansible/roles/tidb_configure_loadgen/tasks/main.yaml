@@ -1,0 +1,28 @@
+#
+#- name: Change directory permissions
+#  ignore_errors: true
+#  file:
+#    path: "{{ home_dir }}/ycsb-0.17.0"
+#    owner: "{{ real_user }}"
+#    group: "{{ real_user }}"
+#    mode: u=rwx,g=rx,o=rx
+#
+#- name: create crdb directory with mode setting inside ycsb
+#  file:
+#    path: "{{ home_dir }}/ycsb-0.17.0/crdb"
+#    state: directory
+#    mode: "u=rw,g=wx,o=rwx"
+
+- name: copy db.properties file to each load gen machine
+  vars:
+    loadgen_private_ips: "{{groups['loadgen_private']}}"
+    tidb_lb: "{{ groups['loadgen_private'][0] }}"
+  template:
+    src: tidb.db.properties.j2
+    dest: "{{ home_dir }}/tidb.properties"
+
+#- name: create usertable under ycsb database
+#  shell: 'java -cp {{ home_dir }}/ycsb-0.17.0/jdbc-binding/lib/jdbc-binding-0.17.0.jar:{{ home_dir }}/ycsb-0.17.0/postgrenosql-binding/lib/postgresql-9.4.1212.jre7.jar site.ycsb.db.JdbcDBCreateTable -p fieldcount=20 -P {{ home_dir }}/db.properties -n usertable'
+#
+#
+

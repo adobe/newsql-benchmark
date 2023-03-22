@@ -1,0 +1,6 @@
+---
+- hosts: [as, loadgen]
+  roles:
+    - common
+    - common_install
+    - cloudalchemy.node_exporter

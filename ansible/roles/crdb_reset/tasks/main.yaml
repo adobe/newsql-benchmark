@@ -1,0 +1,8 @@
+
+- name: drop ycsb database
+  become: true
+  shell: 'cockroach sql --insecure -e="drop database if exists ycsb"'
+
+- name: create ycsb database
+  become: true
+  shell: 'cockroach sql --insecure -e="create database if not exists ycsb"'

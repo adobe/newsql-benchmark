@@ -1,0 +1,18 @@
+defaults
+    log global
+    retries 2
+    timeout connect 10000
+    timeout server 10000
+    timeout client 10000
+
+listen mysql-cluster
+    bind *:5000
+    timeout client 10000
+    timeout server 10000
+    balance leastconn
+    mode tcp
+    balance roundrobin
+    option mysql-check user root
+{% for item in  groups['as_private']  %}
+    server db-{{ loop.index }} {{ item }}:4000 check
+{% endfor %}
