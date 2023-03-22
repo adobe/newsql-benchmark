@@ -48,7 +48,11 @@ The harness-experiments.json file makes reference to these clusters.
 ```shell script 
 vim harness/harness-clusters.json
 ```
-
+### Update grafana password
+- Navigate to newsql-benchmark/ansible/common_install_monitoring.yaml
+- Update the grafana_security section and add the following
+      admin_password: <enter_your_password>
+      
 ### Run script to provision control machine. 
 Provide a unique prefix to use to name all provisioned Azure resources. Set this in an environment variable `DBEVAL_PREFIX`.
 The recommended value for this prefix is `uis-dbeval-<username>-<dbname>`
@@ -88,7 +92,7 @@ The tar archive will include the following
       
       
 *[on local machine]*
-- Open http://localhost:3000 in your browser to access grafana. Use username:admin, password:password. If port is not open, use the following command
+- Open http://localhost:3000 in your browser to access grafana. Use username:admin, password:<enter_your_password>. If port is not open, use the following command
    
 - ```export CONTROL_MACHINE_IP=`cat ansible/inventory-cm.yaml| grep '\[control\]' -A 1| tail -n1` ; ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i terraform/out/id_rsa_tf -L 3000:localhost:3000 fdb@$CONTROL_MACHINE_IP```
 - The Node exporter dashboard comes pre-installed and can be used to monitor cluster health.
