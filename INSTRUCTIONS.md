@@ -143,3 +143,18 @@ ansible -i ansible/inventory.yaml -i ansible/inventory-cm.yaml -i ansible/invent
 export ANSIBLE_HOST_KEY_CHECKING=False
 ansible -i ansible/inventory.yaml -i ansible/inventory-cm.yaml -i ansible/inventory.yaml -u fdb --private-key terraform/out/id_rsa_tf loadgen -m shell -a 'COLUMNS=120 top -o %CPU -b -c -d1 -n1 | head -n5'
 ```
+
+## Steps to add support for a new DB
+
+*Note*: There needs to be a YCSB Binding for the DB. If not, you will need to create a fork of YCSB and add the binding. See ansible/roles/loadgen_ycsb_install/tasks/main.yaml for an example of this.
+
+- Update the harness/harness-db-steps.json file to include a new section for the DB - Similiar to the fdb, tidb & crdb sections - e.g. mongodb.
+- ```
+  "mongodb":{
+     "ycsb_binding_name":       "mongodb",
+     "provisionDb":             ["harness-ansible", "common_vm_setup.yaml  mongodb_install.yaml common_install_monitoring.yaml"],
+     "resetDb":                 ["harness-ansible", "mongodb_reset.yaml"]
+  }
+  ```
+- You will need to write 2 new ansible scripts - one for installing the DB software (provisionDb) and another for resetting the DB (resetDb).
+- Update the harness/harness-experiments.json file to reference the new DB (mongodb) under dbName.
