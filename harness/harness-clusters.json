@@ -1,14 +1,14 @@
 {
   "3NodeCluster": {
-    "dbNodeType": "Standard_L8s_v2",
+    "dbNodeType": "Standard_L8s_v3",
     "dbNodeCount": 3,
     "ssdType": "local",
     "loadgenNodeType": "Standard_F8s_v2",
-    "loadgenNodeCount": 6,
+    "loadgenNodeCount": 3,
     "loadgenType": "ycsb"
   },
   "5NodeCluster": {
-    "dbNodeType": "Standard_L8s_v2",
+    "dbNodeType": "Standard_L8s_v3",
     "dbNodeCount": 5,
     "ssdType": "local",
     "loadgenNodeType": "Standard_F8s_v2",
@@ -16,7 +16,7 @@
     "loadgenType": "ycsb"
   },
   "10NodeCluster": {
-    "dbNodeType": "Standard_L8s_v2",
+    "dbNodeType": "Standard_L8s_v3",
     "dbNodeCount": 10,
     "ssdType": "local",
     "loadgenNodeType": "Standard_F8s_v2",
@@ -24,7 +24,7 @@
     "loadgenType": "ycsb"
   },
   "20NodeCluster": {
-    "dbNodeType": "Standard_L8s_v2",
+    "dbNodeType": "Standard_L8s_v3",
     "dbNodeCount": 20,
     "ssdType": "local",
     "loadgenNodeType": "Standard_F8s_v2",

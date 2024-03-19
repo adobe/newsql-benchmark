@@ -134,7 +134,7 @@ resource "azurerm_managed_disk" "datadisks" {
   //create_option        = "Copy"
   //source_resource_id   = azurerm_snapshot.snapshots.*.id[count.index]
   tags                 = local.tags
-  zones                = [element(azurerm_linux_virtual_machine.aerovm.*.zone, ceil((count.index + 1) * 1.0 / local.ascluster["disks_per_vm"]) - 1)]
+  //zones                = [element(azurerm_linux_virtual_machine.aerovm.*.zone, ceil((count.index + 1) * 1.0 / local.ascluster["disks_per_vm"]) - 1)]
 }
 
 # Attach disk to VM

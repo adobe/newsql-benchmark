@@ -20,7 +20,7 @@ variable "override_loadgencluster_map" {
 
 locals {
   default_ascluster_map = {
-    "vm_type"         = "Standard_L8s_v2"
+    "vm_type"         = "Standard_L8s_v3"
     "vm_count"        = "0"
     "disks_per_vm"    = "0"
     //"disk_type"       = "StandardSSD_LRS"
@@ -40,14 +40,6 @@ locals {
     "vm_count" = "0"
   }
   loadgencluster = merge(local.default_loadgencluster_map, var.override_loadgencluster_map)
-}
-
-output "debug1" {
-  value = local.ascluster
-}
-
-output "debug2" {
-  value = var.override_ascluster_map
 }
 
 variable "enable_ultra_ssd" {
