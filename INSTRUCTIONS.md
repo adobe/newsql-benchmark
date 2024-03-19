@@ -13,37 +13,35 @@ Currently supported workload generators
 | Tool      | Version  |
 |-----------|----------|
 | Python    | 3.x      |
-| Terraform | 0.14.2   |
-| Ansible   | 2.10.3_1 |
-| Azure CLI | 2.16.0   |
-| GNU Tar   | 1.32     |
+| Terraform | 1.5.7   |
+| Ansible   | 9.3.0 |
+| Azure CLI | 2.58.0   |
+| GNU Tar   | 1.35     |
 *[on local machine]*
 ```shell script
 brew install terraform ansible azure-cli gnu-tar
 brew upgrade terraform ansible azure-cli gnu-tar
 ```
 ### Login to Azure
-**Make sure that you are logged into the Adobe San Jose VPN**
-Visit http://sanjose-ssh-out.corp.adobe.com/
+**When running within the Adobe, make sure that you are logged into the Adobe San Jose VPN**
 
 *[on local machine]*
 ```shell script
 az login
 # Follow instructions to complete login
 az account list --output table
-az account set --subscription 60631e84-1bf3-42ca-bacc-c5242b586725
-# use the subcription id for the R&D subscription ^
+az account set --subscription <subcription-id>
 ```
 
 ### Update Harness specification files
 *[on local machine]*
 
 This file lists various experiments to run. 
-Each experiment specifies a database to benchmark and various workload to run on it. 
+Each experiment specifies a database to benchmark and various workload to run on it. If you plan to use the default experiment, no change is required.
 ```shell script 
 vim harness/harness-experiments.json
 ```
-This file lists various clusters to use. 
+This file lists various clusters to use. If you plan to use the default cluster definitions, no change is required.
 The harness-experiments.json file makes reference to these clusters.
 ```shell script 
 vim harness/harness-clusters.json
@@ -52,13 +50,13 @@ vim harness/harness-clusters.json
 - Navigate to newsql-benchmark/ansible/common_install_monitoring.yaml
 - Update the grafana_security section and add the following
       admin_password: <enter_your_password>
-      
+
 ### Run script to provision control machine. 
 Provide a unique prefix to use to name all provisioned Azure resources. Set this in an environment variable `DBEVAL_PREFIX`.
 The recommended value for this prefix is `uis-dbeval-<username>-<dbname>`
 *[on local machine]*
 ```
-export DBEVAL_PREFIX=uis-dbeval-arsriram-fdb
+export DBEVAL_PREFIX=uis-dbeval-<username>-<dbname>
 sh start-control-machine.sh
 ```
 
@@ -77,7 +75,7 @@ The tar archive will include the following
   
 *[on control machine]*
 -     az login
-      az account set --subscription 60631e84-1bf3-42ca-bacc-c5242b586725"
+      az account set --subscription <subscription-id>"
       # start a tmux session
       tmux
       # run harness program
@@ -112,7 +110,7 @@ The tar archive will include the following
 ### Destroy all resources
 *[on control machine]*
 -     export DBEVAL_PREFIX=uis-dbeval-<username>-<dbname>
--     cd ~/terraform; terraform apply -auto-approve -var prefix=$DBEVAL_PREFIX -var 'override_ascluster_map={vm_type="Standard_L8s_v2", vm_count="0", disks_per_vm="0"}' -var 'override_loadgencluster_map={vm_type="Standard_F8s_v2", vm_count="0"}'
+-     cd ~/terraform; terraform apply -auto-approve -var prefix=$DBEVAL_PREFIX -var 'override_ascluster_map={vm_type="Standard_L8s_v3", vm_count="0", disks_per_vm="0"}' -var 'override_loadgencluster_map={vm_type="Standard_F8s_v2", vm_count="0"}'
 *[on local machine]*
 -     export DBEVAL_PREFIX=uis-dbeval-<username>-<dbname>
 -     cd terraform;  terraform destroy -auto-approve -var prefix=$DBEVAL_PREFIX

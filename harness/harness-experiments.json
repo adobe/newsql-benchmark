@@ -1,22 +1,14 @@
 {
   "workingDirectory": "/home/fdb/harness/workingDir",
-  "runId": "fdb-dec19",
-  "keepLastClusterAlive": false,
+  "runId": "fdb-14-feb-2024",
+  "keepLastClusterAlive": true,
   "experiments": [
     {
-      "experimentName": "fdb-100M-experiment",
+      "experimentName": "fdb-100K-experiment",
       "dbName": "fdb",
-      "testClusters": ["3NodeCluster","5NodeCluster"],
-      "numberOfTestRecords": [100000000],
-      "maxRuntimePerIterationInSeconds": 600,
-      "workloadList": "default"
-    },
-    {
-      "experimentName": "fdb-1B-experiment",
-      "dbName": "fdb",
-      "testClusters": ["10NodeCluster", "20NodeCluster"],
-      "numberOfTestRecords": [1000000000],
-      "maxRuntimePerIterationInSeconds": 1800,
+      "testClusters": ["3NodeCluster"],
+      "numberOfTestRecords": [100000],
+      "maxRuntimePerIterationInSeconds": 60,
       "workloadList": "default"
     }
   ],
@@ -24,24 +16,24 @@
       "default": [
          {
             "workloadName": "insertWorkload",
-            "workerParallelism":[[1,1],[4,1],[4,8],[4,32],[4,64],[8,64],[8,128]],
+            "workerParallelism":[[4,1]],
             "operationsPerWorkerProcessThread": 35000000,
             "ignore": false,
             "resetDbBeforeEachIteration": true
          },
          {
             "workloadName": "readOnlyWorkload",
-            "workerParallelism":[[1,1],[4,1],[4,8],[4,12],[4,16]],
+            "workerParallelism":[[4,1]],
             "operationsPerWorkerProcessThread": 10000000
          },
          {
             "workloadName": "readModifyWriteWorkload",
-            "workerParallelism":[[1,1],[4,1],[4,8],[4,12],[4,16]],
+            "workerParallelism":[[4,1]],
             "operationsPerWorkerProcessThread": 10000000
          },
          {
             "workloadName": "read90Update10Workload",
-            "workerParallelism":[[1,1],[4,1],[4,8],[4,12],[4,16]],
+            "workerParallelism":[[4,1]],
             "operationsPerWorkerProcessThread": 10000000
          }
       ]
